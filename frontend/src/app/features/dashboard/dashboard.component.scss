@@ -1,0 +1,482 @@
+// =============================================================================
+// Design tokens
+// Palette: deep charcoal-navy surface, single teal accent (matches the chart
+// line so the score dial and chart read as one system), functional green /
+// amber / red used ONLY for strength / medium-confidence / weakness signals
+// (functional, not decorative, color-coding — appropriate for an analytics
+// tool where color needs to carry meaning).
+// Type: Inter for prose (clean, neutral, highly legible in dense layouts);
+// JetBrains Mono for the score number and repo names — a deliberate nod to
+// the developer-tool subject matter, not a generic "monospace label" tell.
+// =============================================================================
+
+:host {
+  --bg: #0f1117;
+  --surface: #171a23;
+  --surface-border: #2a2e3a;
+  --text-primary: #e7e9ee;
+  --text-muted: #8b90a0;
+  --accent: #5eead4;
+  --accent-dim: rgba(94, 234, 212, 0.15);
+  --strength: #4ade80;
+  --weakness: #f97066;
+  --medium: #facc15;
+
+  display: block;
+  background: var(--bg);
+  min-height: 100vh;
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+}
+
+.page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  margin-bottom: 2rem;
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+  }
+
+  .brand-mark {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.4rem;
+    color: var(--accent);
+    border: 1px solid var(--surface-border);
+    border-radius: 8px;
+    padding: 0.35rem 0.55rem;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  .brand-sub {
+    margin: 0.15rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+}
+
+.search-field {
+  ::ng-deep .mat-mdc-text-field-wrapper {
+    background: var(--surface);
+  }
+}
+
+.analyze-btn {
+  height: 56px;
+  white-space: nowrap;
+}
+
+.inline-spinner ::ng-deep circle {
+  stroke: currentColor;
+}
+
+// -----------------------------------------------------------------------
+// Banners / loading / empty states
+// -----------------------------------------------------------------------
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(249, 112, 102, 0.1);
+  border: 1px solid rgba(249, 112, 102, 0.35);
+  color: var(--weakness);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+
+  &.small {
+    margin: 0.75rem 0 0;
+    padding: 0.5rem 0.75rem;
+  }
+}
+
+.loading-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 4rem 0;
+  color: var(--text-muted);
+
+  mat-icon {
+    font-size: 2.5rem;
+    height: 2.5rem;
+    width: 2.5rem;
+    opacity: 0.6;
+  }
+}
+
+// -----------------------------------------------------------------------
+// Layout grid
+// -----------------------------------------------------------------------
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+
+  @media (max-width: 860px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  background: var(--surface) !important;
+  border: 1px solid var(--surface-border);
+  border-radius: 14px !important;
+  color: var(--text-primary) !important;
+  padding: 1.5rem !important;
+  box-shadow: none !important;
+}
+
+.card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 1rem;
+  color: var(--text-primary);
+}
+
+.muted {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin: 0.2rem 0;
+}
+
+// -----------------------------------------------------------------------
+// Score card
+// -----------------------------------------------------------------------
+
+.score-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.profile-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+
+  .avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    border: 1px solid var(--surface-border);
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 1.15rem;
+  }
+
+  .bio {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: 0.35rem 0;
+    max-width: 42ch;
+  }
+
+  .stat-line {
+    margin-top: 0.35rem;
+  }
+}
+
+.score-dial {
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.score-dial-ring {
+  width: 132px;
+  height: 132px;
+  border-radius: 50%;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  background:
+    radial-gradient(closest-side, var(--surface) 78%, transparent 79% 100%),
+    conic-gradient(var(--accent) calc(var(--score) * 1%), var(--surface-border) 0);
+}
+
+.score-number {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2.4rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.score-max {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.score-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+// -----------------------------------------------------------------------
+// Score breakdown bars
+// -----------------------------------------------------------------------
+
+.breakdown-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+  font-size: 0.85rem;
+}
+
+.breakdown-row-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.weight-tag {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.breakdown-bar-track {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--surface-border);
+  overflow: hidden;
+}
+
+.breakdown-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 4px;
+}
+
+.breakdown-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  min-width: 2.5ch;
+}
+
+// -----------------------------------------------------------------------
+// Strengths / weaknesses chips
+// -----------------------------------------------------------------------
+
+.section-divider {
+  margin: 1.1rem 0;
+  border-color: var(--surface-border);
+}
+
+.chip {
+  font-size: 0.8rem;
+}
+
+.chip--strength {
+  color: var(--strength);
+}
+
+.chip--weakness {
+  color: var(--weakness);
+}
+
+// -----------------------------------------------------------------------
+// Chart
+// -----------------------------------------------------------------------
+
+.chart-card {
+  grid-column: span 2;
+
+  @media (max-width: 860px) {
+    grid-column: span 1;
+  }
+}
+
+.chart-container {
+  height: 260px;
+  position: relative;
+}
+
+// -----------------------------------------------------------------------
+// Repositories
+// -----------------------------------------------------------------------
+
+.repo-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.repo-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--surface-border);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.repo-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.repo-lang {
+  margin-left: 0.6rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  border: 1px solid var(--surface-border);
+  border-radius: 999px;
+  padding: 0.05rem 0.5rem;
+}
+
+.repo-desc {
+  margin: 0.25rem 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  max-width: 55ch;
+}
+
+.repo-stats {
+  display: flex;
+  gap: 0.9rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+
+  mat-icon {
+    font-size: 1rem;
+    height: 1rem;
+    width: 1rem;
+    vertical-align: -2px;
+  }
+}
+
+// -----------------------------------------------------------------------
+// Resume matcher
+// -----------------------------------------------------------------------
+
+.resume-card {
+  grid-column: span 2;
+
+  @media (max-width: 860px) {
+    grid-column: span 1;
+  }
+}
+
+.upload-dropzone {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border: 1px dashed var(--surface-border);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  transition: border-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--accent);
+    color: var(--text-primary);
+  }
+
+  &--disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+.upload-error {
+  color: var(--weakness);
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.upload-hint {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.skill-match-summary {
+  margin-top: 1.1rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.skill-list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.skill-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  border-radius: 8px;
+  padding: 0.45rem 0.65rem;
+  background: var(--bg);
+  border: 1px solid var(--surface-border);
+
+  mat-icon {
+    font-size: 1.05rem;
+    height: 1.05rem;
+    width: 1.05rem;
+  }
+
+  .skill-name {
+    flex: 1;
+  }
+
+  .skill-confidence {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+  }
+
+  &--high mat-icon {
+    color: var(--strength);
+  }
+  &--medium mat-icon {
+    color: var(--medium);
+  }
+  &--low mat-icon {
+    color: var(--weakness);
+  }
+}

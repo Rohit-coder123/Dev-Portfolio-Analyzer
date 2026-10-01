@@ -1,0 +1,31 @@
+<div class="flex flex-col gap-2">
+  <input
+    type="file"
+    accept="application/pdf"
+    id="resume-file-input"
+    class="hidden"
+    [disabled]="loading || !!disabledReason"
+    (change)="onFileChange($event)"
+  />
+
+  <label
+    for="resume-file-input"
+    class="upload-dropzone"
+    [class.upload-dropzone--disabled]="loading || !!disabledReason"
+  >
+    @if (loading) {
+      <mat-spinner diameter="22" />
+      <span>Matching skills against GitHub…</span>
+    } @else {
+      <mat-icon>upload_file</mat-icon>
+      <span>{{ selectedFileName ?? 'Upload resume (PDF)' }}</span>
+    }
+  </label>
+
+  @if (validationError) {
+    <p class="upload-error">{{ validationError }}</p>
+  }
+  @if (disabledReason && !loading) {
+    <p class="upload-hint">{{ disabledReason }}</p>
+  }
+</div>

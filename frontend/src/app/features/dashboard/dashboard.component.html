@@ -1,0 +1,184 @@
+<div class="page">
+  <header class="page-header">
+    <div class="brand">
+      <span class="brand-mark">&lt;/&gt;</span>
+      <div>
+        <h1>Developer Portfolio Analyzer</h1>
+        <p class="brand-sub">Deterministic GitHub &amp; resume analysis — no AI scoring, just math.</p>
+      </div>
+    </div>
+
+    <app-profile-search-form
+      [loading]="(analysisLoading$ | async) ?? false"
+      (analyze)="onAnalyze($event)"
+    />
+  </header>
+
+  @if (analysisError$ | async; as error) {
+    <div class="banner banner--error">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ error }}</span>
+    </div>
+  }
+
+  @if (analysisLoading$ | async) {
+    <div class="loading-state">
+      <mat-spinner diameter="42" />
+      <p>Fetching repositories and commit history from GitHub…</p>
+    </div>
+  }
+
+  @if (analysis$ | async; as analysis) {
+    <section class="dashboard-grid">
+      <!-- Profile + overall score -->
+      <mat-card class="card score-card">
+        <div class="profile-row">
+          @if (analysis.avatarUrl) {
+            <img [src]="analysis.avatarUrl" [alt]="analysis.githubUsername" class="avatar" />
+          }
+          <div>
+            <h2>{{ analysis.displayName || analysis.githubUsername }}</h2>
+            <p class="muted">&#64;{{ analysis.githubUsername }}</p>
+            @if (analysis.bio) {
+              <p class="bio">{{ analysis.bio }}</p>
+            }
+            <p class="muted stat-line">
+              {{ analysis.publicReposCount }} public repos · {{ analysis.followersCount }} followers
+            </p>
+          </div>
+        </div>
+
+        <div class="score-dial" [style.--score]="analysis.overallScore">
+          <div class="score-dial-ring">
+            <span class="score-number">{{ analysis.overallScore | number: '1.0-0' }}</span>
+            <span class="score-max">/100</span>
+          </div>
+          <span class="score-label">Developer Score</span>
+        </div>
+      </mat-card>
+
+      <!-- Score breakdown -->
+      <mat-card class="card">
+        <h3 class="card-title">Score breakdown</h3>
+        @for (row of scoreBreakdownRows$ | async; track row.label) {
+          <div class="breakdown-row">
+            <div class="breakdown-row-label">
+              <span>{{ row.label }}</span>
+              <span class="weight-tag">{{ row.weightLabel }}</span>
+            </div>
+            <div class="breakdown-bar-track" [matTooltip]="row.value + ' / 100'">
+              <div class="breakdown-bar-fill" [style.width.%]="row.value"></div>
+            </div>
+            <span class="breakdown-value">{{ row.value | number: '1.0-0' }}</span>
+          </div>
+        }
+      </mat-card>
+
+      <!-- Strengths / weaknesses -->
+      <mat-card class="card">
+        <h3 class="card-title">Strengths</h3>
+        <mat-chip-set>
+          @for (s of analysis.insights.strengths; track s) {
+            <mat-chip class="chip chip--strength">
+              <mat-icon matChipAvatar>trending_up</mat-icon>
+              {{ s }}
+            </mat-chip>
+          }
+        </mat-chip-set>
+
+        <mat-divider class="section-divider" />
+
+        <h3 class="card-title">Weaknesses</h3>
+        <mat-chip-set>
+          @for (w of analysis.insights.weaknesses; track w) {
+            <mat-chip class="chip chip--weakness">
+              <mat-icon matChipAvatar>trending_down</mat-icon>
+              {{ w }}
+            </mat-chip>
+          }
+        </mat-chip-set>
+      </mat-card>
+
+      <!-- Commit trend chart -->
+      <mat-card class="card chart-card">
+        <h3 class="card-title">Contribution trend (last 12 weeks)</h3>
+        <div class="chart-container">
+          <canvas
+            baseChart
+            [data]="(chartData$ | async) ?? { labels: [], datasets: [] }"
+            [options]="chartOptions"
+            type="line"
+          ></canvas>
+        </div>
+      </mat-card>
+
+      <!-- Top repositories -->
+      <mat-card class="card">
+        <h3 class="card-title">Top repositories</h3>
+        <ul class="repo-list">
+          @for (repo of analysis.topRepositories; track repo.name) {
+            <li class="repo-row">
+              <div>
+                <span class="repo-name">{{ repo.name }}</span>
+                @if (repo.primaryLanguage) {
+                  <span class="repo-lang">{{ repo.primaryLanguage }}</span>
+                }
+                @if (repo.description) {
+                  <p class="repo-desc">{{ repo.description }}</p>
+                }
+              </div>
+              <div class="repo-stats">
+                <span title="Stars"><mat-icon inline>star</mat-icon> {{ repo.stars }}</span>
+                <span title="Forks"><mat-icon inline>call_split</mat-icon> {{ repo.forks }}</span>
+              </div>
+            </li>
+          }
+        </ul>
+      </mat-card>
+
+      <!-- Resume matcher -->
+      <mat-card class="card resume-card">
+        <h3 class="card-title">Resume matcher</h3>
+        <p class="muted">
+          Upload a PDF resume to cross-reference claimed skills against
+          &#64;{{ analysis.githubUsername }}'s actual GitHub activity.
+        </p>
+
+        <app-resume-upload
+          [loading]="(resumeLoading$ | async) ?? false"
+          (fileSelected)="onResumeSelected($event)"
+        />
+
+        @if (resumeError$ | async; as rErr) {
+          <div class="banner banner--error small">
+            <mat-icon>error_outline</mat-icon>
+            <span>{{ rErr }}</span>
+          </div>
+        }
+
+        @if (resumeMatch$ | async; as match) {
+          <div class="skill-match-summary">
+            {{ match.skillsCorroboratedByGithub }} of {{ match.skillsDetectedInResume }} claimed skills
+            corroborated by GitHub activity.
+          </div>
+          <ul class="skill-list">
+            @for (skill of match.skillMatches; track skill.skillName) {
+              <li class="skill-row skill-row--{{ skill.confidenceLevel.toLowerCase() }}">
+                <mat-icon>{{ confidenceIcon(skill.confidenceLevel) }}</mat-icon>
+                <span class="skill-name">{{ skill.skillName }}</span>
+                <span class="skill-confidence">{{ skill.confidenceLevel }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </mat-card>
+    </section>
+  }
+
+  @if (!(analysis$ | async) && !(analysisLoading$ | async) && !(analysisError$ | async)) {
+    <div class="empty-state">
+      <mat-icon>data_object</mat-icon>
+      <p>Enter a GitHub username above to generate a Developer Score.</p>
+    </div>
+  }
+</div>
